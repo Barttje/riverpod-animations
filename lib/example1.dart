@@ -8,39 +8,42 @@ void main() {
 
 final countProvider = StateNotifierProvider((_) => CountProvider(1));
 
-final currentCount = Provider((ref) => ref.watch(countProvider.state));
+final currentCount = Provider((ref) => ref.watch(countProvider));
 
-class MemoryExample extends StatelessWidget {
+class MemoryExample extends HookConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.watch(countProvider.notifier);
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Scaffold(
-          appBar: AppBar(
-            title: Text("Riverpod Animation Example"),
-          ),
-          body: Column(
-            children: [
-              AnimatedWidget(),
-              RaisedButton(
-                  child: Text("Increment"),
-                  onPressed: () {
-                    context.read(countProvider).increment();
-                  }),
-            ],
-          )),
+        appBar: AppBar(
+          title: Text("Riverpod Animation Example"),
+        ),
+        body: Column(
+          children: [
+            AnimatedWidget(),
+            ElevatedButton(
+              child: Text("Increment"),
+              onPressed: () {
+                notifier.increment();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class AnimatedWidget extends HookWidget {
+class AnimatedWidget extends HookConsumerWidget {
   final Duration duration = const Duration(milliseconds: 1000);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final _controller = useAnimationController(duration: duration);
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -48,7 +51,7 @@ class AnimatedWidget extends HookWidget {
       }
     });
 
-    var _count = useProvider(currentCount);
+    var _count = ref.watch(currentCount);
     useValueChanged(_count, (_, __) async {
       _controller.forward();
     });
@@ -60,7 +63,7 @@ class AnimatedWidget extends HookWidget {
             child: Container(
               margin: EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: Colors.green[300].withOpacity(_controller.value),
+                  color: Colors.green[300]!.withOpacity(_controller.value),
                   shape: BoxShape.circle),
               height: 200,
               width: 200,

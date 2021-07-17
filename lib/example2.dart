@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -18,35 +16,38 @@ class BooleanNotifier extends StateNotifier<bool> {
 
 final booleanProvider = StateNotifierProvider((_) => BooleanNotifier(false));
 
-final booleanState = Provider((ref) => ref.watch(booleanProvider.state));
+final booleanState = Provider((ref) => ref.watch(booleanProvider));
 
-class MemoryExample extends StatelessWidget {
+class MemoryExample extends HookConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.watch(booleanProvider.notifier);
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Scaffold(
-          appBar: AppBar(
-            title: Text("Riverpod Animation Example"),
-          ),
-          body: Column(
-            children: [
-              AnimatedWidget(),
-              RaisedButton(
-                  child: Text("Toggle"),
-                  onPressed: () {
-                    context.read(booleanProvider).toggle();
-                  }),
-            ],
-          )),
+        appBar: AppBar(
+          title: Text("Riverpod Animation Example"),
+        ),
+        body: Column(
+          children: [
+            AnimatedWidget(),
+            ElevatedButton(
+              child: Text("Toggle"),
+              onPressed: () {
+                notifier.toggle();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class AnimatedWidget extends HookWidget {
+class AnimatedWidget extends HookConsumerWidget {
   final Duration duration = const Duration(milliseconds: 1000);
   static double containerWidth = 200;
   static double circleRadius = 25;
@@ -54,15 +55,15 @@ class AnimatedWidget extends HookWidget {
   static double endPoint = (containerWidth / 2 - circleRadius / 2);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final _controller = useAnimationController(
         duration: duration,
         lowerBound: beginPoint,
         upperBound: endPoint,
         initialValue: beginPoint);
 
-    var _boolState = useProvider(booleanState);
-    useValueChanged(_boolState, (_, __) {
+    final _boolState = ref.watch(booleanState);
+    useValueChanged<bool, Function(bool, bool)>(_boolState, (_, __) {
       if (_boolState) {
         _controller.forward();
       } else {
@@ -71,29 +72,29 @@ class AnimatedWidget extends HookWidget {
     });
 
     return AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Center(
-            child: Container(
-              margin: EdgeInsets.all(10),
-              height: containerWidth,
-              width: containerWidth,
-              decoration: BoxDecoration(
-                  color: Colors.white70,
-                  border: Border.all(color: Colors.green)),
-              child: Transform.translate(
-                offset: Offset(_controller.value, 0),
-                child: Align(
-                  child: Container(
-                    width: circleRadius,
-                    height: circleRadius,
-                    decoration: BoxDecoration(
-                        color: Colors.green, shape: BoxShape.circle),
-                  ),
+      animation: _controller,
+      builder: (context, child) {
+        return Center(
+          child: Container(
+            margin: EdgeInsets.all(10),
+            height: containerWidth,
+            width: containerWidth,
+            decoration: BoxDecoration(
+                color: Colors.white70, border: Border.all(color: Colors.green)),
+            child: Transform.translate(
+              offset: Offset(_controller.value, 0),
+              child: Align(
+                child: Container(
+                  width: circleRadius,
+                  height: circleRadius,
+                  decoration: BoxDecoration(
+                      color: Colors.green, shape: BoxShape.circle),
                 ),
               ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }
