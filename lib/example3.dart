@@ -5,22 +5,29 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void main() {
-  runApp(ProviderScope(child: MemoryExample()));
+  runApp(const ProviderScope(child: MemoryExample()));
 }
 
-class BooleanNotifier extends StateNotifier<bool> {
-  BooleanNotifier(bool state) : super(state);
+class BooleanNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    return false;
+  }
 
   void toggle() {
     state = !state;
   }
 }
 
-final booleanProvider = StateNotifierProvider((_) => BooleanNotifier(false));
+final booleanProvider = NotifierProvider<BooleanNotifier, bool>(() {
+  return BooleanNotifier();
+});
 
 final booleanState = Provider((ref) => ref.watch(booleanProvider));
 
 class MemoryExample extends HookConsumerWidget {
+  const MemoryExample({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.watch(booleanProvider.notifier);
@@ -31,13 +38,13 @@ class MemoryExample extends HookConsumerWidget {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Riverpod Animation Example"),
+          title: const Text("Riverpod Animation Example"),
         ),
         body: Column(
           children: [
-            AnimatedWidget(),
-            RaisedButton(
-                child: Text("Rotate"),
+            const AnimatedWidget(),
+            ElevatedButton(
+                child: const Text("Rotate"),
                 onPressed: () {
                   notifier.toggle();
                 }),
@@ -50,6 +57,8 @@ class MemoryExample extends HookConsumerWidget {
 
 class AnimatedWidget extends HookConsumerWidget {
   final Duration duration = const Duration(seconds: 1);
+
+  const AnimatedWidget({super.key});
 
   Color getColor(bool isUp) {
     if (isUp) {
@@ -67,32 +76,29 @@ class AnimatedWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _controller =
-        useAnimationController(duration: duration, initialValue: 1);
+    final controller = useAnimationController(duration: duration, initialValue: 1);
 
-    var _isUp = ref.watch(booleanState);
-    final isUp = useState(_isUp);
+    var isUp0 = ref.watch(booleanState);
+    final isUp = useState(isUp0);
 
-    useValueChanged(_isUp, (_, __) async {
-      await _controller.reverse();
-      isUp.value = _isUp;
-      await _controller.forward();
+    useValueChanged(isUp0, (_, __) async {
+      await controller.reverse();
+      isUp.value = isUp0;
+      await controller.forward();
     });
 
     return AnimatedBuilder(
-      animation: _controller,
+      animation: controller,
       builder: (context, child) {
         return Transform(
-          transform: Matrix4.rotationX((1 - _controller.value) * pi / 2),
+          transform: Matrix4.rotationX((1 - controller.value) * pi / 2),
           alignment: Alignment.center,
           child: Container(
             height: 100,
-            margin: EdgeInsets.all(20),
-            padding: EdgeInsets.all(12),
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(12),
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-                color: getColor(isUp.value),
-                border: Border.all(color: Colors.grey)),
+            decoration: BoxDecoration(color: getColor(isUp.value), border: Border.all(color: Colors.grey)),
             child: Icon(
               getIcon(isUp.value),
               size: 40,
