@@ -8,15 +8,20 @@ void main() {
   runApp(ProviderScope(child: MemoryExample()));
 }
 
-class BooleanNotifier extends StateNotifier<bool> {
-  BooleanNotifier(bool state) : super(state);
+class BooleanNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    return false;
+  }
 
   void toggle() {
     state = !state;
   }
 }
 
-final booleanProvider = StateNotifierProvider((_) => BooleanNotifier(false));
+final booleanProvider = NotifierProvider<BooleanNotifier, bool>(() {
+  return BooleanNotifier();
+});
 
 final booleanState = Provider((ref) => ref.watch(booleanProvider));
 
