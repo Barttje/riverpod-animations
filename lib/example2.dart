@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void main() {
-  runApp(ProviderScope(child: MemoryExample()));
+  runApp(const ProviderScope(child: MemoryExample()));
 }
 
 class BooleanNotifier extends Notifier<bool> {
@@ -24,6 +24,8 @@ final booleanProvider = NotifierProvider<BooleanNotifier, bool>(() {
 final booleanState = Provider((ref) => ref.watch(booleanProvider));
 
 class MemoryExample extends HookConsumerWidget {
+  const MemoryExample({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.watch(booleanProvider.notifier);
@@ -34,13 +36,13 @@ class MemoryExample extends HookConsumerWidget {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Riverpod Animation Example"),
+          title: const Text("Riverpod Animation Example"),
         ),
         body: Column(
           children: [
-            AnimatedWidget(),
+            const AnimatedWidget(),
             ElevatedButton(
-              child: Text("Toggle"),
+              child: const Text("Toggle"),
               onPressed: () {
                 notifier.toggle();
               },
@@ -59,41 +61,39 @@ class AnimatedWidget extends HookConsumerWidget {
   static double beginPoint = (containerWidth / 2 - circleRadius / 2) * -1;
   static double endPoint = (containerWidth / 2 - circleRadius / 2);
 
+  const AnimatedWidget({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final _controller = useAnimationController(
-        duration: duration,
-        lowerBound: beginPoint,
-        upperBound: endPoint,
-        initialValue: beginPoint);
+    final controller = useAnimationController(
+        duration: duration, lowerBound: beginPoint, upperBound: endPoint, initialValue: beginPoint);
 
-    final _boolState = ref.watch(booleanState);
-    useValueChanged<bool, Function(bool, bool)>(_boolState, (_, __) {
-      if (_boolState) {
-        _controller.forward();
+    final boolState = ref.watch(booleanState);
+    useValueChanged<bool, Function(bool, bool)>(boolState, (_, __) {
+      if (boolState) {
+        controller.forward();
       } else {
-        _controller.reverse();
+        controller.reverse();
       }
+      return null;
     });
 
     return AnimatedBuilder(
-      animation: _controller,
+      animation: controller,
       builder: (context, child) {
         return Center(
           child: Container(
-            margin: EdgeInsets.all(10),
+            margin: const EdgeInsets.all(10),
             height: containerWidth,
             width: containerWidth,
-            decoration: BoxDecoration(
-                color: Colors.white70, border: Border.all(color: Colors.green)),
+            decoration: BoxDecoration(color: Colors.white70, border: Border.all(color: Colors.green)),
             child: Transform.translate(
-              offset: Offset(_controller.value, 0),
+              offset: Offset(controller.value, 0),
               child: Align(
                 child: Container(
                   width: circleRadius,
                   height: circleRadius,
-                  decoration: BoxDecoration(
-                      color: Colors.green, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
                 ),
               ),
             ),
